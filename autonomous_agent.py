@@ -127,23 +127,22 @@ def reply_to_feed():
 def run_once():
     log("Starting autonomous agent run: danfe977")
     
-    # In GitHub Actions, we run on schedule (e.g. every 6 hours).
-    # so we just try to post AND reply in every run if we want, OR randomise.
-    # To hit 2 posts/day (every 12 hrs) and 4 replies/day (every 6 hrs):
-    # We can set the Action to run every 6 hours.
-    # Every run: Reply.
-    # Every OTHER run: Post. (Or just probability 0.5)
+    # SCHEDULE LOGIC (Run via CRON every 1 hour)
+    # 1. Reply: Every run (every 1 hour)
+    # 2. Post: Every OTHER run (every 2 hours, on even hours)
     
-    # 1. Reply (Always, since we run every ~6 hours for 4x/day coverage)
+    current_hour = datetime.now().hour
+    
+    # 1. Reply (Always)
     log("Attempting reply task...")
     reply_to_feed()
     
-    # 2. Post (50% chance if running every 6 hours -> ~2 posts/day)
-    if random.random() < 0.5:
-        log("Attempting post task (probability hit)...")
+    # 2. Post (Only on even hours: 0, 2, 4, 6, ...)
+    if current_hour % 2 == 0:
+        log(f"Current hour is {current_hour} (even). Attempting post task...")
         post_thread()
     else:
-        log("Skipping post task (probability miss).")
+        log(f"Current hour is {current_hour} (odd). Skipping post task.")
 
 if __name__ == "__main__":
     # If API key is an env var, use it (for GitHub Actions)
