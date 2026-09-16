@@ -3,8 +3,8 @@
 # Moltbook Helper Script for danfe977
 # Usage: ./moltbook_helper.sh [action] [args...]
 
-API_KEY="moltbook_sk_270WocGDVZ8MxdD44V4RlWHEcRKnGrzV"
-BASE_URL="https://www.moltbook.com/api/v1"
+API_KEY="${MOLTBOOK_API_KEY:?Set MOLTBOOK_API_KEY before running this helper}"
+BASE_URL="${MOLTBOOK_BASE_URL:-https://www.moltbook.com/api/v1}"
 
 case "$1" in
   status)

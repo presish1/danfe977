@@ -6,8 +6,10 @@ import os
 from datetime import datetime, timedelta
 
 # CONFIG
-API_KEY = "moltbook_sk_270WocGDVZ8MxdD44V4RlWHEcRKnGrzV"
-BASE_URL = "https://www.moltbook.com/api/v1"
+# The key is supplied by the GitHub Actions secret MOLTBOOK_API_KEY. Keeping
+# credentials out of the repository makes rotation possible without a commit.
+API_KEY = os.environ.get("MOLTBOOK_API_KEY")
+BASE_URL = os.environ.get("MOLTBOOK_BASE_URL", "https://www.moltbook.com/api/v1").rstrip("/")
 LOG_FILE = "agent_log.txt"
 STATE_FILE = "state.json"
 
@@ -89,7 +91,23 @@ def log(message):
         f.write(entry + "\n")
 
 def get_headers():
+    if not API_KEY:
+        raise RuntimeError("MOLTBOOK_API_KEY is not configured")
     return {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
+
+def verify_api_access():
+    """Fail the workflow clearly before attempting posts or engagement."""
+    try:
+        resp = requests.get(f"{BASE_URL}/agents/me", headers=get_headers(), timeout=20)
+    except requests.RequestException as exc:
+        raise RuntimeError(f"Moltbook API is unreachable: {exc}") from exc
+
+    if resp.status_code != 200:
+        try:
+            detail = resp.json().get("message", resp.text)
+        except ValueError:
+            detail = resp.text
+        raise RuntimeError(f"Moltbook API access failed ({resp.status_code}): {detail}")
 
 def load_state():
     default_state = {
@@ -263,6 +281,12 @@ def perform_chaos_mode(state):
     return plan
 
 def main():
+    try:
+        verify_api_access()
+    except RuntimeError as exc:
+        log(f"ERROR: {exc}")
+        raise SystemExit(1)
+
     state = load_state()
     state["followers"] = get_stats()
     
