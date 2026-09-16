@@ -3,6 +3,14 @@
 # Moltbook Helper Script for danfe977
 # Usage: ./moltbook_helper.sh [action] [args...]
 
+ENV_FILE="$(dirname "$0")/.env"
+if [ -z "$MOLTBOOK_API_KEY" ] && [ -f "$ENV_FILE" ]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "$ENV_FILE"
+  set +a
+fi
+
 API_KEY="${MOLTBOOK_API_KEY:?Set MOLTBOOK_API_KEY before running this helper}"
 BASE_URL="${MOLTBOOK_BASE_URL:-https://www.moltbook.com/api/v1}"
 

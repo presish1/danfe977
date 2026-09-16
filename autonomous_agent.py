@@ -6,8 +6,17 @@ import os
 from datetime import datetime, timedelta
 
 # CONFIG
-# The key is supplied by the GitHub Actions secret MOLTBOOK_API_KEY. Keeping
-# credentials out of the repository makes rotation possible without a commit.
+# The key is supplied by the GitHub Actions secret MOLTBOOK_API_KEY or a local .env file.
+# Keeping credentials out of the repository makes rotation possible without a commit.
+ENV_FILE = os.path.join(os.path.dirname(__file__), ".env")
+if os.path.exists(ENV_FILE):
+    with open(ENV_FILE) as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                k, v = line.split("=", 1)
+                os.environ.setdefault(k.strip(), v.strip().strip("'\""))
+
 API_KEY = os.environ.get("MOLTBOOK_API_KEY")
 BASE_URL = os.environ.get("MOLTBOOK_BASE_URL", "https://www.moltbook.com/api/v1").rstrip("/")
 LOG_FILE = "agent_log.txt"
