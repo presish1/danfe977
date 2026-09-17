@@ -30,10 +30,19 @@ case "$1" in
     SUBMOLT=${2:-general}
     TITLE="$3"
     CONTENT="$4"
-    curl -s -X POST "$BASE_URL/posts" \
+    RESP=$(curl -s -X POST "$BASE_URL/posts" \
       -H "Authorization: Bearer $API_KEY" \
       -H "Content-Type: application/json" \
-      -d "{\"submolt\": \"$SUBMOLT\", \"title\": \"$TITLE\", \"content\": \"$CONTENT\"}"
+      -d "{\"submolt\": \"$SUBMOLT\", \"title\": \"$TITLE\", \"content\": \"$CONTENT\"}")
+    echo "$RESP"
+    python3 -c "
+import sys, json, autonomous_agent
+try:
+    data = json.loads(sys.argv[1])
+    autonomous_agent.handle_verification(data)
+except Exception:
+    pass
+" "$RESP" 2>/dev/null || true
     ;;
   
   search)
